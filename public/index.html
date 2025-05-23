@@ -16,38 +16,46 @@
   <button onclick="sendMessage()">Send</button>
 
   <script>
-    const api = 'https://chat-fwu3.onrender.com';
+  const api = 'https://chat-fwu3.onrender.com';
 
-    async function sendMessage() {
-      const chatCode = document.getElementById('chatCode').value;
-      const sender = document.getElementById('sender').value;
-      const message = document.getElementById('message').value;
+  async function sendMessage() {
+    const chatCode = document.getElementById('chatCode').value;
+    const sender = document.getElementById('sender').value;
+    const message = document.getElementById('message').value;
 
-      if (!chatCode || !sender || !message) return alert("Fill all fields!");
+    if (!chatCode || !sender || !message) return alert("Fill all fields!");
 
-      await fetch(`${api}/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_code: chatCode, sender, message })
-      });
+    await fetch(`${api}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_code: chatCode, sender, message })
+    });
 
-      document.getElementById('message').value = '';
+    document.getElementById('message').value = '';
+  }
+
+  async function loadMessages() {
+    const chatCode = document.getElementById('chatCode').value;
+    if (!chatCode) return;
+
+    const res = await fetch(`${api}/messages/${chatCode}`);
+    const messages = await res.json();
+    const chat = document.getElementById('chat');
+    chat.innerHTML = messages.map(msg =>
+      `<div><b>${msg.sender}</b>: ${msg.message} <small>(${new Date(msg.timestamp).toLocaleTimeString()})</small></div>`
+    ).join('');
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  setInterval(loadMessages, 1000); // refresh every 2 seconds
+
+  document.getElementById("message").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendMessage();
     }
+  });
+</script>
 
-    async function loadMessages() {
-      const chatCode = document.getElementById('chatCode').value;
-      if (!chatCode) return;
-
-      const res = await fetch(`${api}/messages/${chatCode}`);
-      const messages = await res.json();
-      const chat = document.getElementById('chat');
-      chat.innerHTML = messages.map(msg =>
-        `<div><b>${msg.sender}</b>: ${msg.message} <small>(${new Date(msg.timestamp).toLocaleTimeString()})</small></div>`
-      ).join('');
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    setInterval(loadMessages, 2000); // refresh every 2 seconds
-  </script>
 </body>
 </html>
